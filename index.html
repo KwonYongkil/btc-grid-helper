@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>BTC Grid Helper</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:sans-serif;
+padding:20px;
+}
+
+.card{
+background:#1e293b;
+padding:15px;
+border-radius:10px;
+margin-bottom:15px;
+}
+
+button{
+width:100%;
+padding:15px;
+border:none;
+border-radius:8px;
+background:#22c55e;
+font-size:18px;
+font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>BTC GRID HELPER</h2>
+
+<div class="card">
+현재 가격  
+<h3 id="price">-</h3>
+</div>
+
+<div class="card">
+시장 상태  
+<div id="market"></div>
+</div>
+
+<div class="card">
+매물대  
+<div id="levels"></div>
+</div>
+
+<div class="card">
+숏 거미줄 (롱28 헤지)  
+<div id="grid"></div>
+</div>
+
+<button onclick="analyze()">시장 분석 + 거미줄 계산</button>
+
+<script>
+
+async function analyze(){
+
+let res = await fetch(
+"https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDC"
+);
+
+let data = await res.json();
+
+let price = parseFloat(data.price);
+
+document.getElementById("price").innerText =
+price.toFixed(2);
+
+let resistance1 = price + 300;
+let resistance2 = price + 600;
+let support1 = price - 300;
+let support2 = price - 600;
+
+document.getElementById("levels").innerHTML =
+
+`
+저항  
+${resistance1.toFixed(0)}  
+${resistance2.toFixed(0)}
+
+<br><br>
+
+지지  
+${support1.toFixed(0)}  
+${support2.toFixed(0)}
+`;
+
+let grid = [
+
+price + 200,
+price + 500,
+price + 900,
+price + 1300,
+price + 1800
+
+];
+
+let qty = [4,5,6,6,7];
+
+let html="";
+
+for(let i=0;i<grid.length;i++){
+
+html +=
+grid[i].toFixed(0) +
+" → " +
+qty[i] +
+"<br>";
+
+}
+
+document.getElementById("grid").innerHTML = html;
+
+document.getElementById("market").innerText =
+"상승 추세 / 단기 과열 체크 필요";
+
+}
+
+</script>
+
+</body>
+
+</html>
