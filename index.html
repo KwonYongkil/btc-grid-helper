@@ -28,6 +28,8 @@ font-size:13px;
 margin-bottom:18px;
 }
 
+/* 카드 */
+
 .card{
 background:#1e293b;
 padding:18px;
@@ -36,27 +38,45 @@ margin-bottom:14px;
 box-shadow:0 4px 10px rgba(0,0,0,0.3);
 }
 
+/* 가격 */
+
+.price{
+font-size:28px;
+font-weight:bold;
+color:#22c55e;
+margin-bottom:6px;
+}
+
+/* 시장상태 */
+
+.market{
+font-size:17px;
+font-weight:600;
+}
+
+/* 섹션 */
+
 .section-title{
-font-size:15px;
+font-size:14px;
 color:#94a3b8;
 margin-bottom:8px;
 }
 
-.big{
-font-size:26px;
-font-weight:bold;
-color:#22c55e;
-}
+/* 값 */
 
 .value{
 font-size:18px;
 font-weight:600;
 }
 
+/* 거미줄 */
+
 .grid{
 font-size:17px;
 line-height:1.9;
 }
+
+/* 버튼 */
 
 button{
 width:100%;
@@ -67,7 +87,7 @@ background:#22c55e;
 font-size:18px;
 font-weight:bold;
 color:#052e16;
-margin-top:6px;
+margin-bottom:14px;
 }
 
 </style>
@@ -80,42 +100,63 @@ margin-top:6px;
 <div class="version" id="version"></div>
 
 
+<!-- 가격 + 시장상태 -->
+
 <div class="card">
+
 <div class="section-title">현재 가격</div>
-<div class="big" id="price">-</div>
-</div>
+<div class="price" id="price">-</div>
 
-
-<div class="card">
 <div class="section-title">시장 상태</div>
-<div class="value" id="market">-</div>
+<div class="market" id="market">-</div>
+
 </div>
 
 
+<!-- 분석 버튼 -->
+
+<button onclick="analyze()">
+시장 분석 + 거미줄 계산
+</button>
+
+
+<!-- 매물대 -->
+
 <div class="card">
+
 <div class="section-title">매물대</div>
+
 <div class="value" id="levels">-</div>
+
 </div>
 
 
+<!-- 눌림 -->
+
 <div class="card">
+
 <div class="section-title">눌림 예상 구간</div>
+
 <div class="value" id="pullback">-</div>
+
 </div>
 
+
+<!-- 거미줄 -->
 
 <div class="card">
+
 <div class="section-title">숏 거미줄 (롱28 기준)</div>
+
 <div class="grid" id="grid">-</div>
+
 </div>
 
-
-<button onclick="analyze()">시장 분석 + 거미줄 계산</button>
 
 
 <script>
 
-/* 버전 증가 */
+/* 버전 자동 증가 */
 
 let version = localStorage.getItem("app_version");
 
@@ -202,7 +243,7 @@ for(let i=0;i<grid.length;i++){
 
 html +=
 grid[i].toFixed(0) +
-"  →  " +
+" → " +
 qty[i] +
 "<br>";
 
