@@ -4,7 +4,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>BTC Grid Analyzer</title>
+<title>BTC GRID ANALYZER</title>
 
 <style>
 
@@ -107,7 +107,16 @@ margin-bottom:14px;
 </div>
 
 
-<button onclick="analyze()">시장 분석 + 거미줄 계산</button>
+<button onclick="analyze()">시장 분석</button>
+
+
+<div class="card">
+<div class="section-title">추세</div>
+<div class="market" id="trend">-</div>
+
+<div class="section-title">최근 범위</div>
+<div class="value" id="range">-</div>
+</div>
 
 
 <div class="card">
@@ -134,11 +143,12 @@ margin-bottom:14px;
 </div>
 
 
+
 <script>
 
 /* 버전 */
 
-const APP_VERSION = "v7";
+const APP_VERSION = "v8";
 
 document.getElementById("version").innerText =
 "Version " + APP_VERSION;
@@ -155,46 +165,49 @@ let res = await fetch(
 
 let data = await res.json();
 
-let price=parseFloat(data.price);
+let price = parseFloat(data.price);
 
-document.getElementById("price").innerText=price.toFixed(2);
+document.getElementById("price").innerText =
+price.toFixed(2);
 
 
 
 /* 캔들 */
 
-let k=await fetch(
+let k = await fetch(
 "https://api.binance.com/api/v3/klines?symbol=BTCUSDC&interval=1h&limit=20"
 );
 
-let candles=await k.json();
+let candles = await k.json();
 
-let closes=candles.map(c=>parseFloat(c[4]));
-let highs=candles.map(c=>parseFloat(c[2]));
-let lows=candles.map(c=>parseFloat(c[3]));
+let closes = candles.map(c=>parseFloat(c[4]));
+let highs = candles.map(c=>parseFloat(c[2]));
+let lows = candles.map(c=>parseFloat(c[3]));
 
 
 
 /* MA */
 
-let sum=closes.reduce((a,b)=>a+b,0);
-let ma=sum/closes.length;
+let sum = closes.reduce((a,b)=>a+b,0);
+let ma = sum / closes.length;
 
 
 
 /* 표준편차 */
 
-let variance=closes.reduce((a,b)=>a+Math.pow(b-ma,2),0)/closes.length;
-let sd=Math.sqrt(variance);
+let variance =
+closes.reduce((a,b)=>a+Math.pow(b-ma,2),0) / closes.length;
+
+let sd = Math.sqrt(variance);
 
 
 
 /* Bollinger */
 
-let bb_upper=ma+2*sd;
-let bb_lower=ma-2*sd;
+let bb_upper = ma + 2*sd;
+let bb_lower = ma - 2*sd;
 
-document.getElementById("bb").innerHTML=
+document.getElementById("bb").innerHTML =
 
 `
 Upper ${bb_upper.toFixed(0)}<br>
@@ -218,10 +231,11 @@ else losses-=diff;
 
 }
 
-let rs=gains/losses;
-let rsi=100-(100/(1+rs));
+let rs = gains/losses;
+let rsi = 100-(100/(1+rs));
 
-document.getElementById("rsi").innerText=rsi.toFixed(1);
+document.getElementById("rsi").innerText =
+rsi.toFixed(1);
 
 
 
@@ -229,10 +243,17 @@ document.getElementById("rsi").innerText=rsi.toFixed(1);
 
 let position="중립";
 
-if(price>bb_upper) position="BB Upper 위 (과열)";
-else if(price>ma) position="BB Upper~Middle (상승)";
-else if(price>bb_lower) position="BB Middle~Lower (눌림)";
-else position="BB Lower 아래 (과매도)";
+if(price>bb_upper)
+position="BB Upper 위";
+
+else if(price>ma)
+position="BB Upper~Middle";
+
+else if(price>bb_lower)
+position="BB Middle~Lower";
+
+else
+position="BB Lower 아래";
 
 document.getElementById("position").innerText=position;
 
@@ -252,7 +273,32 @@ document.getElementById("levels").innerHTML=
 
 
 
-/* 눌림 예상 */
+/* 최근 범위 */
+
+document.getElementById("range").innerHTML=
+
+`
+최근 고점 ${resistance.toFixed(0)}<br>
+최근 저점 ${support.toFixed(0)}
+`;
+
+
+
+/* 추세 */
+
+let trend="조정";
+
+if(price>ma && rsi>55)
+trend="상승 추세";
+
+else if(price<ma && rsi<45)
+trend="하락 추세";
+
+document.getElementById("trend").innerText=trend;
+
+
+
+/* 눌림 */
 
 let pull1=ma;
 let pull2=support;
@@ -314,18 +360,6 @@ html+=grid[i].toFixed(0)+" → "+qty[i]+"<br>";
 }
 
 document.getElementById("grid").innerHTML=html;
-
-
-
-/* 시장 상태 */
-
-let market="중립";
-
-if(rsi>75) market="단기 과열";
-else if(rsi<35) market="반등 가능";
-else market="상승 추세";
-
-document.getElementById("market").innerText=market;
 
 }
 
