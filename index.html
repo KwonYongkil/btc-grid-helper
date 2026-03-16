@@ -3,6 +3,7 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>BTC Grid Analyzer</title>
 
 <style>
@@ -80,7 +81,9 @@ margin-bottom:14px;
 <body>
 
 <h1>BTC GRID ANALYZER</h1>
+
 <div class="version" id="version"></div>
+
 
 <div class="card">
 
@@ -101,17 +104,21 @@ margin-bottom:14px;
 
 </div>
 
+
 <button onclick="analyze()">시장 분석 + 거미줄 계산</button>
+
 
 <div class="card">
 <div class="section-title">매물대</div>
 <div class="value" id="levels">-</div>
 </div>
 
+
 <div class="card">
 <div class="section-title">눌림 예상</div>
 <div class="value" id="pullback">-</div>
 </div>
+
 
 <div class="card">
 <div class="section-title">숏 거미줄</div>
@@ -119,27 +126,21 @@ margin-bottom:14px;
 </div>
 
 
+
 <script>
 
-/* 버전 */
+/* 수동 버전 */
 
-let version = localStorage.getItem("app_version");
+const APP_VERSION = "v5";
 
-if(!version){
-version = 1;
-}else{
-version = parseInt(version)+1;
-}
-
-localStorage.setItem("app_version",version);
-
-document.getElementById("version").innerText="Version v"+version;
+document.getElementById("version").innerText =
+"Version " + APP_VERSION;
 
 
 
 async function analyze(){
 
-/* 가격 */
+/* 현재 가격 */
 
 let res = await fetch(
 "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDC"
