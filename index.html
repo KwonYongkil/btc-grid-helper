@@ -13,20 +13,19 @@ background:#0f172a;
 color:#e5e7eb;
 font-family:-apple-system,BlinkMacSystemFont;
 padding:16px;
-line-height:1.6;
 }
 
 h1{
 text-align:center;
 font-size:26px;
-margin-bottom:5px;
+margin-bottom:4px;
 }
 
 .version{
 text-align:center;
 color:#94a3b8;
 font-size:13px;
-margin-bottom:18px;
+margin-bottom:16px;
 }
 
 .card{
@@ -37,7 +36,7 @@ margin-bottom:14px;
 }
 
 .price{
-font-size:28px;
+font-size:30px;
 font-weight:bold;
 color:#22c55e;
 }
@@ -48,7 +47,7 @@ font-weight:600;
 }
 
 .section-title{
-font-size:14px;
+font-size:13px;
 color:#94a3b8;
 margin-bottom:8px;
 }
@@ -60,7 +59,7 @@ font-weight:600;
 
 .grid{
 font-size:17px;
-line-height:1.9;
+line-height:1.8;
 }
 
 button{
@@ -93,6 +92,12 @@ margin-bottom:14px;
 <div class="section-title">시장 상태</div>
 <div class="market" id="market">-</div>
 
+<div class="section-title">RSI</div>
+<div class="market" id="rsi">-</div>
+
+<div class="section-title">현재 위치</div>
+<div class="market" id="position">-</div>
+
 </div>
 
 
@@ -106,13 +111,13 @@ margin-bottom:14px;
 
 
 <div class="card">
-<div class="section-title">눌림 예상 (Bollinger + 매물대)</div>
+<div class="section-title">눌림 예상</div>
 <div class="value" id="pullback">-</div>
 </div>
 
 
 <div class="card">
-<div class="section-title">숏 거미줄 (롱28 기준)</div>
+<div class="section-title">숏 거미줄</div>
 <div class="grid" id="grid">-</div>
 </div>
 
@@ -139,7 +144,7 @@ document.getElementById("version").innerText =
 
 async function analyze(){
 
-/* 가격 */
+/* 현재 가격 */
 
 let res = await fetch(
 "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDC"
@@ -154,24 +159,87 @@ price.toFixed(2);
 
 
 
-/* 볼린저 계산 (단순 근사) */
+/* 캔들 */
 
-let bb_mid = price - 200;
-let bb_lower = price - 600;
+let k = await fetch(
+"https://api.binance.com/api/v3/klines?symbol=BTCUSDC&interval=1h&limit=20"
+);
+
+let candles = await k.json();
+
+let closes = candles.map(c=>parseFloat(c[4]));
+
+
+
+/* MA */
+
+let sum = closes.reduce((a,b)=>a+b,0);
+
+let ma = sum/closes.length;
+
+
+
+/* 표준편차 */
+
+let variance = closes.reduce((a,b)=>a+Math.pow(b-ma,2),0)/closes.length;
+
+let sd = Math.sqrt(variance);
+
+
+
+/* Bollinger */
+
+let bb_upper = ma + 2*sd;
+
+let bb_lower = ma - 2*sd;
+
+
+
+/* RSI */
+
+let gains=0;
+let losses=0;
+
+for(let i=1;i<closes.length;i++){
+
+let diff = closes[i]-closes[i-1];
+
+if(diff>0) gains+=diff;
+else losses-=diff;
+
+}
+
+let rs = gains/losses;
+
+let rsi = 100-(100/(1+rs));
+
+document.getElementById("rsi").innerText =
+rsi.toFixed(1);
+
+
+
+/* 현재 위치 */
+
+let position="중립";
+
+if(price>bb_upper) position="BB Upper 위 (과열)";
+else if(price>ma) position="BB Upper~Middle (상승)";
+else if(price>bb_lower) position="BB Middle~Lower (눌림)";
+else position="BB Lower 아래 (과매도)";
+
+document.getElementById("position").innerText=position;
 
 
 
 /* 매물대 */
 
-let resistance1 = price + 300;
-let resistance2 = price + 700;
+let resistance1 = price+300;
+let resistance2 = price+700;
 
-let support1 = price - 300;
-let support2 = price - 700;
+let support1 = price-300;
+let support2 = price-700;
 
-
-
-document.getElementById("levels").innerHTML =
+document.getElementById("levels").innerHTML=
 
 `
 저항<br>
@@ -187,28 +255,26 @@ ${support2.toFixed(0)}
 
 
 
-/* 눌림 계산 */
+/* 눌림 */
 
-let pull1 = bb_mid;
+let pull1 = ma;
 let pull2 = support1;
 let pull3 = bb_lower;
 
-
-
-document.getElementById("pullback").innerHTML =
+document.getElementById("pullback").innerHTML=
 
 `
-1차 눌림 (볼린저 중단)<br>
+1차 눌림 (MA20)<br>
 ${pull1.toFixed(0)}
 
 <br>
 
-2차 눌림 (매물대 지지)<br>
+2차 눌림 (매물대)<br>
 ${pull2.toFixed(0)}
 
 <br>
 
-최대 눌림 (볼린저 하단)<br>
+최대 눌림 (BB Lower)<br>
 ${pull3.toFixed(0)}
 `;
 
@@ -216,27 +282,27 @@ ${pull3.toFixed(0)}
 
 /* 거미줄 */
 
-let grid = [
+let grid=[
 
-price + 200,
-price + 500,
-price + 900,
-price + 1400,
-price + 2000
+price+200,
+price+500,
+price+900,
+price+1400,
+price+2000
 
 ];
 
-let qty = [4,5,6,6,7];
+let qty=[4,5,6,6,7];
 
 let html="";
 
 for(let i=0;i<grid.length;i++){
 
-html += grid[i].toFixed(0)+" → "+qty[i]+"<br>";
+html+=grid[i].toFixed(0)+" → "+qty[i]+"<br>";
 
 }
 
-document.getElementById("grid").innerHTML = html;
+document.getElementById("grid").innerHTML=html;
 
 
 
@@ -244,13 +310,11 @@ document.getElementById("grid").innerHTML = html;
 
 let market="중립";
 
-if(price % 2 == 0){
-market="상승 후 눌림 가능";
-}else{
-market="상승 추세 유지";
-}
+if(rsi>75) market="단기 과열";
+else if(rsi<35) market="반등 가능";
+else market="상승 추세 유지";
 
-document.getElementById("market").innerText = market;
+document.getElementById("market").innerText=market;
 
 }
 
