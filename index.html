@@ -3,6 +3,7 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>BTC GRID ANALYZER</title>
 
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
@@ -24,8 +25,8 @@ margin-bottom:4px;
 
 .version{
 text-align:center;
-font-size:12px;
 color:#94a3b8;
+font-size:12px;
 margin-bottom:10px;
 }
 
@@ -75,7 +76,7 @@ height:320px;
 <body>
 
 <h1>BTC GRID ANALYZER</h1>
-<div class="version">Version v10.1</div>
+<div class="version">Version v10</div>
 
 <div class="card">
 
@@ -103,23 +104,21 @@ height:320px;
 
 <script>
 
-/* 차트 생성 */
-
 const chart = LightweightCharts.createChart(
-document.getElementById("chart"),
+document.getElementById('chart'),
 {
 layout:{
-background:{color:"#0f172a"},
-textColor:"#d1d5db"
+background:{color:'#0f172a'},
+textColor:'#d1d5db'
 },
 grid:{
-vertLines:{color:"#1e293b"},
-horzLines:{color:"#1e293b"}
+vertLines:{color:'#1e293b'},
+horzLines:{color:'#1e293b'}
 }
 })
 
-const series = chart.addLineSeries({
-color:"#22c55e",
+const lineSeries = chart.addLineSeries({
+color:'#22c55e',
 lineWidth:2
 })
 
@@ -164,16 +163,14 @@ value:parseFloat(c[4])
 
 }))
 
-series.setData(chartData)
-
-chart.timeScale().fitContent()
+lineSeries.setData(chartData)
 
 
 
-/* MA20 */
+/* MA */
 
-let ma =
-closes.slice(-20).reduce((a,b)=>a+b,0)/20
+let sum = closes.slice(-20).reduce((a,b)=>a+b,0)
+let ma = sum / 20
 
 
 
@@ -182,7 +179,7 @@ closes.slice(-20).reduce((a,b)=>a+b,0)/20
 let variance =
 closes.slice(-20).reduce((a,b)=>a+Math.pow(b-ma,2),0)/20
 
-let sd=Math.sqrt(variance)
+let sd = Math.sqrt(variance)
 
 
 
@@ -250,40 +247,31 @@ document.getElementById("pullback").innerHTML=
 
 
 
-/* 기존 라인 삭제 */
+/* 수평선 표시 */
 
-series.removePriceLine()
+chart.addLineSeries({
+color:'#fbbf24',
+lineWidth:1
+}).setData([
+{time:chartData[0].time,value:pull1},
+{time:chartData[chartData.length-1].time,value:pull1}
+])
 
+chart.addLineSeries({
+color:'#f97316',
+lineWidth:1
+}).setData([
+{time:chartData[0].time,value:pull2},
+{time:chartData[chartData.length-1].time,value:pull2}
+])
 
-
-/* 수평선 */
-
-series.createPriceLine({
-
-price:pull1,
-color:"#fbbf24",
-lineWidth:2,
-title:"Pullback1"
-
-})
-
-series.createPriceLine({
-
-price:pull2,
-color:"#f97316",
-lineWidth:2,
-title:"Pullback2"
-
-})
-
-series.createPriceLine({
-
-price:pull3,
-color:"#ef4444",
-lineWidth:2,
-title:"Pullback3"
-
-})
+chart.addLineSeries({
+color:'#ef4444',
+lineWidth:1
+}).setData([
+{time:chartData[0].time,value:pull3},
+{time:chartData[chartData.length-1].time,value:pull3}
+])
 
 }
 
