@@ -3,7 +3,6 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>BTC Grid Analyzer</title>
 
 <style>
@@ -84,7 +83,6 @@ margin-bottom:14px;
 
 <div class="version" id="version"></div>
 
-
 <div class="card">
 
 <div class="section-title">현재 가격</div>
@@ -109,6 +107,11 @@ margin-bottom:14px;
 
 
 <div class="card">
+<div class="section-title">Bollinger Band</div>
+<div class="value" id="bb">-</div>
+</div>
+
+<div class="card">
 <div class="section-title">매물대</div>
 <div class="value" id="levels">-</div>
 </div>
@@ -131,7 +134,7 @@ margin-bottom:14px;
 
 /* 수동 버전 */
 
-const APP_VERSION = "v5";
+const APP_VERSION = "v6";
 
 document.getElementById("version").innerText =
 "Version " + APP_VERSION;
@@ -163,13 +166,14 @@ let k=await fetch(
 let candles=await k.json();
 
 let closes=candles.map(c=>parseFloat(c[4]));
+let highs=candles.map(c=>parseFloat(c[2]));
+let lows=candles.map(c=>parseFloat(c[3]));
 
 
 
 /* MA */
 
 let sum=closes.reduce((a,b)=>a+b,0);
-
 let ma=sum/closes.length;
 
 
@@ -177,7 +181,6 @@ let ma=sum/closes.length;
 /* 표준편차 */
 
 let variance=closes.reduce((a,b)=>a+Math.pow(b-ma,2),0)/closes.length;
-
 let sd=Math.sqrt(variance);
 
 
@@ -185,8 +188,15 @@ let sd=Math.sqrt(variance);
 /* Bollinger */
 
 let bb_upper=ma+2*sd;
-
 let bb_lower=ma-2*sd;
+
+document.getElementById("bb").innerHTML=
+
+`
+Upper ${bb_upper.toFixed(0)}<br>
+Middle ${ma.toFixed(0)}<br>
+Lower ${bb_lower.toFixed(0)}
+`;
 
 
 
@@ -212,39 +222,29 @@ document.getElementById("rsi").innerText=rsi.toFixed(1);
 
 
 
-/* 현재 위치 */
+/* 위치 */
 
 let position="중립";
 
-if(price>bb_upper) position="BB Upper 위";
-else if(price>ma) position="BB Upper~Middle";
-else if(price>bb_lower) position="BB Middle~Lower";
-else position="BB Lower 아래";
+if(price>bb_upper) position="BB Upper 위 (과열)";
+else if(price>ma) position="BB Upper~Middle (상승)";
+else if(price>bb_lower) position="BB Middle~Lower (눌림)";
+else position="BB Lower 아래 (과매도)";
 
 document.getElementById("position").innerText=position;
 
 
 
-/* 매물대 */
+/* 매물대 (최근 캔들 기준) */
 
-let resistance1=price+300;
-let resistance2=price+700;
-
-let support1=price-300;
-let support2=price-700;
+let resistance=Math.max(...highs);
+let support=Math.min(...lows);
 
 document.getElementById("levels").innerHTML=
 
 `
-저항<br>
-${resistance1.toFixed(0)}<br>
-${resistance2.toFixed(0)}
-
-<br>
-
-지지<br>
-${support1.toFixed(0)}<br>
-${support2.toFixed(0)}
+저항 ${resistance.toFixed(0)}<br>
+지지 ${support.toFixed(0)}
 `;
 
 
@@ -252,7 +252,7 @@ ${support2.toFixed(0)}
 /* 눌림 */
 
 let pull1=ma;
-let pull2=support1;
+let pull2=support;
 let pull3=bb_lower;
 
 document.getElementById("pullback").innerHTML=
@@ -263,7 +263,7 @@ ${pull1.toFixed(0)}
 
 <br>
 
-2차 눌림 (매물대)<br>
+2차 눌림 (최근 지지)<br>
 ${pull2.toFixed(0)}
 
 <br>
