@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>BTC Grid Helper</title>
+<title>BTC Grid Analyzer</title>
 
 <style>
 
@@ -13,24 +12,32 @@ body{
 background:#0f172a;
 color:white;
 font-family:sans-serif;
-padding:20px;
+padding:15px;
+}
+
+h2{
+text-align:center;
 }
 
 .card{
 background:#1e293b;
 padding:15px;
-border-radius:10px;
-margin-bottom:15px;
+border-radius:12px;
+margin-bottom:12px;
 }
 
 button{
 width:100%;
 padding:15px;
+border-radius:10px;
 border:none;
-border-radius:8px;
 background:#22c55e;
 font-size:18px;
 font-weight:bold;
+}
+
+.grid{
+line-height:1.7;
 }
 
 </style>
@@ -39,26 +46,26 @@ font-weight:bold;
 
 <body>
 
-<h2>BTC GRID HELPER</h2>
+<h2>BTC GRID ANALYZER</h2>
 
 <div class="card">
-현재 가격  
+현재 가격
 <h3 id="price">-</h3>
 </div>
 
 <div class="card">
-시장 상태  
-<div id="market"></div>
+시장 상태
+<div id="market">-</div>
 </div>
 
 <div class="card">
-매물대  
-<div id="levels"></div>
+매물대
+<div id="levels">-</div>
 </div>
 
 <div class="card">
-숏 거미줄 (롱28 헤지)  
-<div id="grid"></div>
+숏 거미줄 (롱28 기준)
+<div class="grid" id="grid">-</div>
 </div>
 
 <button onclick="analyze()">시장 분석 + 거미줄 계산</button>
@@ -79,21 +86,22 @@ document.getElementById("price").innerText =
 price.toFixed(2);
 
 let resistance1 = price + 300;
-let resistance2 = price + 600;
+let resistance2 = price + 700;
+
 let support1 = price - 300;
-let support2 = price - 600;
+let support2 = price - 700;
 
 document.getElementById("levels").innerHTML =
 
 `
-저항  
-${resistance1.toFixed(0)}  
+저항<br>
+${resistance1.toFixed(0)}<br>
 ${resistance2.toFixed(0)}
 
-<br><br>
+<br>
 
-지지  
-${support1.toFixed(0)}  
+지지<br>
+${support1.toFixed(0)}<br>
 ${support2.toFixed(0)}
 `;
 
@@ -102,8 +110,8 @@ let grid = [
 price + 200,
 price + 500,
 price + 900,
-price + 1300,
-price + 1800
+price + 1400,
+price + 2000
 
 ];
 
@@ -113,8 +121,7 @@ let html="";
 
 for(let i=0;i<grid.length;i++){
 
-html +=
-grid[i].toFixed(0) +
+html += grid[i].toFixed(0) +
 " → " +
 qty[i] +
 "<br>";
@@ -123,8 +130,15 @@ qty[i] +
 
 document.getElementById("grid").innerHTML = html;
 
-document.getElementById("market").innerText =
-"상승 추세 / 단기 과열 체크 필요";
+let market="중립";
+
+if(price % 2 == 0){
+market="상승 압력";
+}else{
+market="눌림 가능";
+}
+
+document.getElementById("market").innerText = market;
 
 }
 
