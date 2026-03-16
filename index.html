@@ -12,66 +12,70 @@ body{
 background:#0f172a;
 color:#e5e7eb;
 font-family:-apple-system,BlinkMacSystemFont;
-padding:16px;
+padding:14px;
 }
 
 h1{
 text-align:center;
-font-size:26px;
+font-size:24px;
 margin-bottom:4px;
 }
 
 .version{
 text-align:center;
 color:#94a3b8;
-font-size:13px;
-margin-bottom:16px;
+font-size:12px;
+margin-bottom:14px;
 }
 
 .card{
 background:#1e293b;
-padding:18px;
-border-radius:14px;
-margin-bottom:14px;
+padding:16px;
+border-radius:12px;
+margin-bottom:12px;
 }
 
 .price{
-font-size:30px;
+font-size:28px;
 font-weight:bold;
 color:#22c55e;
 }
 
-.market{
-font-size:17px;
-font-weight:600;
-}
-
 .section-title{
-font-size:13px;
+font-size:12px;
 color:#94a3b8;
-margin-bottom:8px;
+margin-bottom:6px;
 }
 
 .value{
-font-size:18px;
+font-size:16px;
 font-weight:600;
 }
 
 .grid{
-font-size:17px;
-line-height:1.8;
+font-size:16px;
+line-height:1.7;
+}
+
+.market{
+font-size:15px;
+font-weight:600;
 }
 
 button{
 width:100%;
-padding:16px;
-border-radius:12px;
+padding:14px;
+border-radius:10px;
 border:none;
 background:#22c55e;
-font-size:18px;
+font-size:16px;
 font-weight:bold;
 color:#052e16;
-margin-bottom:14px;
+margin-bottom:12px;
+}
+
+iframe{
+border-radius:10px;
 }
 
 </style>
@@ -81,7 +85,6 @@ margin-bottom:14px;
 <body>
 
 <h1>BTC GRID ANALYZER</h1>
-
 <div class="version" id="version"></div>
 
 <div class="card">
@@ -143,15 +146,26 @@ margin-bottom:14px;
 </div>
 
 
+<div class="card">
+<div class="section-title">TradingView Chart</div>
+
+<iframe
+width="100%"
+height="400"
+src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=15&theme=dark"
+></iframe>
+
+</div>
+
 
 <script>
 
 /* 버전 */
 
-const APP_VERSION = "v8";
+const APP_VERSION="v9"
 
-document.getElementById("version").innerText =
-"Version " + APP_VERSION;
+document.getElementById("version").innerText=
+"Version "+APP_VERSION
 
 
 
@@ -159,117 +173,114 @@ async function analyze(){
 
 /* 가격 */
 
-let res = await fetch(
+let res=await fetch(
 "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDC"
-);
+)
 
-let data = await res.json();
+let data=await res.json()
 
-let price = parseFloat(data.price);
+let price=parseFloat(data.price)
 
-document.getElementById("price").innerText =
-price.toFixed(2);
+document.getElementById("price").innerText=
+price.toFixed(2)
 
 
 
 /* 캔들 */
 
-let k = await fetch(
+let k=await fetch(
 "https://api.binance.com/api/v3/klines?symbol=BTCUSDC&interval=1h&limit=20"
-);
+)
 
-let candles = await k.json();
+let candles=await k.json()
 
-let closes = candles.map(c=>parseFloat(c[4]));
-let highs = candles.map(c=>parseFloat(c[2]));
-let lows = candles.map(c=>parseFloat(c[3]));
+let closes=candles.map(c=>parseFloat(c[4]))
+let highs=candles.map(c=>parseFloat(c[2]))
+let lows=candles.map(c=>parseFloat(c[3]))
 
 
 
 /* MA */
 
-let sum = closes.reduce((a,b)=>a+b,0);
-let ma = sum / closes.length;
+let sum=closes.reduce((a,b)=>a+b,0)
+let ma=sum/closes.length
 
 
 
 /* 표준편차 */
 
-let variance =
-closes.reduce((a,b)=>a+Math.pow(b-ma,2),0) / closes.length;
-
-let sd = Math.sqrt(variance);
+let variance=closes.reduce((a,b)=>a+Math.pow(b-ma,2),0)/closes.length
+let sd=Math.sqrt(variance)
 
 
 
 /* Bollinger */
 
-let bb_upper = ma + 2*sd;
-let bb_lower = ma - 2*sd;
+let bb_upper=ma+2*sd
+let bb_lower=ma-2*sd
 
-document.getElementById("bb").innerHTML =
+document.getElementById("bb").innerHTML=
 
 `
 Upper ${bb_upper.toFixed(0)}<br>
 Middle ${ma.toFixed(0)}<br>
 Lower ${bb_lower.toFixed(0)}
-`;
+`
 
 
 
 /* RSI */
 
-let gains=0;
-let losses=0;
+let gains=0
+let losses=0
 
 for(let i=1;i<closes.length;i++){
 
-let diff=closes[i]-closes[i-1];
+let diff=closes[i]-closes[i-1]
 
-if(diff>0) gains+=diff;
-else losses-=diff;
+if(diff>0) gains+=diff
+else losses-=diff
 
 }
 
-let rs = gains/losses;
-let rsi = 100-(100/(1+rs));
+let rs=gains/losses
+let rsi=100-(100/(1+rs))
 
-document.getElementById("rsi").innerText =
-rsi.toFixed(1);
+document.getElementById("rsi").innerText=rsi.toFixed(1)
 
 
 
 /* 위치 */
 
-let position="중립";
+let position="중립"
 
 if(price>bb_upper)
-position="BB Upper 위";
+position="BB Upper 위"
 
 else if(price>ma)
-position="BB Upper~Middle";
+position="BB Upper~Middle"
 
 else if(price>bb_lower)
-position="BB Middle~Lower";
+position="BB Middle~Lower"
 
 else
-position="BB Lower 아래";
+position="BB Lower 아래"
 
-document.getElementById("position").innerText=position;
+document.getElementById("position").innerText=position
 
 
 
 /* 매물대 */
 
-let resistance=Math.max(...highs);
-let support=Math.min(...lows);
+let resistance=Math.max(...highs)
+let support=Math.min(...lows)
 
 document.getElementById("levels").innerHTML=
 
 `
 저항 ${resistance.toFixed(0)}<br>
 지지 ${support.toFixed(0)}
-`;
+`
 
 
 
@@ -280,29 +291,29 @@ document.getElementById("range").innerHTML=
 `
 최근 고점 ${resistance.toFixed(0)}<br>
 최근 저점 ${support.toFixed(0)}
-`;
+`
 
 
 
 /* 추세 */
 
-let trend="조정";
+let trend="조정"
 
 if(price>ma && rsi>55)
-trend="상승 추세";
+trend="상승 추세"
 
 else if(price<ma && rsi<45)
-trend="하락 추세";
+trend="하락 추세"
 
-document.getElementById("trend").innerText=trend;
+document.getElementById("trend").innerText=trend
 
 
 
 /* 눌림 */
 
-let pull1=ma;
-let pull2=support;
-let pull3=bb_lower;
+let pull1=ma
+let pull2=support
+let pull3=bb_lower
 
 document.getElementById("pullback").innerHTML=
 
@@ -310,30 +321,38 @@ document.getElementById("pullback").innerHTML=
 1차 눌림 ${pull1.toFixed(0)}<br>
 2차 눌림 ${pull2.toFixed(0)}<br>
 최대 눌림 ${pull3.toFixed(0)}
-`;
+`
 
 
 
 /* 확률 */
 
-let pullProb="50%";
-let riseProb="50%";
+let pullProb="50%"
+let riseProb="50%"
 
 if(price>bb_upper){
-pullProb="80%";
-riseProb="20%";
-}
-else if(price>ma){
-pullProb="60%";
-riseProb="40%";
-}
-else{
-pullProb="40%";
-riseProb="60%";
+
+pullProb="80%"
+riseProb="20%"
+
 }
 
-document.getElementById("pullprob").innerText=pullProb;
-document.getElementById("riseprob").innerText=riseProb;
+else if(price>ma){
+
+pullProb="60%"
+riseProb="40%"
+
+}
+
+else{
+
+pullProb="40%"
+riseProb="60%"
+
+}
+
+document.getElementById("pullprob").innerText=pullProb
+document.getElementById("riseprob").innerText=riseProb
 
 
 
@@ -347,19 +366,19 @@ price+900,
 price+1400,
 price+2000
 
-];
+]
 
-let qty=[4,5,6,6,7];
+let qty=[4,5,6,6,7]
 
-let html="";
+let html=""
 
 for(let i=0;i<grid.length;i++){
 
-html+=grid[i].toFixed(0)+" → "+qty[i]+"<br>";
+html+=grid[i].toFixed(0)+" → "+qty[i]+"<br>"
 
 }
 
-document.getElementById("grid").innerHTML=html;
+document.getElementById("grid").innerHTML=html
 
 }
 
