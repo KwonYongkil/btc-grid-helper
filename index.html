@@ -3,8 +3,7 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>BTC Grid Analyzer 1.1 </title>
+<title>BTC Grid Analyzer</title>
 
 <style>
 
@@ -40,6 +39,13 @@ font-weight:bold;
 line-height:1.6;
 }
 
+.version{
+text-align:center;
+color:#94a3b8;
+font-size:14px;
+margin-bottom:10px;
+}
+
 </style>
 
 </head>
@@ -47,6 +53,7 @@ line-height:1.6;
 <body>
 
 <h2>BTC GRID ANALYZER</h2>
+<div class="version" id="version"></div>
 
 <div class="card">
 현재 가격
@@ -77,6 +84,24 @@ line-height:1.6;
 
 <script>
 
+/* 버전 자동 증가 */
+
+let version = localStorage.getItem("app_version");
+
+if(!version){
+version = 1;
+}else{
+version = parseInt(version) + 1;
+}
+
+localStorage.setItem("app_version",version);
+
+document.getElementById("version").innerText =
+"Version v" + version;
+
+
+/* 분석 */
+
 async function analyze(){
 
 let res = await fetch(
@@ -89,6 +114,9 @@ let price = parseFloat(data.price);
 
 document.getElementById("price").innerText =
 price.toFixed(2);
+
+
+/* 매물대 */
 
 let resistance1 = price + 300;
 let resistance2 = price + 700;
@@ -111,6 +139,9 @@ ${support1.toFixed(0)}<br>
 ${support2.toFixed(0)}
 `;
 
+
+/* 눌림 */
+
 document.getElementById("pullback").innerHTML =
 
 `
@@ -127,6 +158,9 @@ ${support2.toFixed(0)}
 최대 눌림<br>
 ${support3.toFixed(0)}
 `;
+
+
+/* 거미줄 */
 
 let grid = [
 
@@ -153,6 +187,9 @@ qty[i] +
 
 document.getElementById("grid").innerHTML = html;
 
+
+/* 시장 상태 */
+
 let market="중립";
 
 if(price % 2 == 0){
@@ -168,5 +205,4 @@ document.getElementById("market").innerText = market;
 </script>
 
 </body>
-
 </html>
