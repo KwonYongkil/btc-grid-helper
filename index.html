@@ -3,6 +3,7 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>BTC Grid Analyzer</title>
 
 <style>
@@ -98,7 +99,10 @@ margin-bottom:14px;
 <div class="market" id="position">-</div>
 
 <div class="section-title">눌림 확률</div>
-<div class="market" id="prob">-</div>
+<div class="market" id="pullprob">-</div>
+
+<div class="section-title">상승 확률</div>
+<div class="market" id="riseprob">-</div>
 
 </div>
 
@@ -110,6 +114,7 @@ margin-bottom:14px;
 <div class="section-title">Bollinger Band</div>
 <div class="value" id="bb">-</div>
 </div>
+
 
 <div class="card">
 <div class="section-title">매물대</div>
@@ -129,12 +134,11 @@ margin-bottom:14px;
 </div>
 
 
-
 <script>
 
-/* 수동 버전 */
+/* 버전 */
 
-const APP_VERSION = "v6";
+const APP_VERSION = "v7";
 
 document.getElementById("version").innerText =
 "Version " + APP_VERSION;
@@ -143,7 +147,7 @@ document.getElementById("version").innerText =
 
 async function analyze(){
 
-/* 현재 가격 */
+/* 가격 */
 
 let res = await fetch(
 "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDC"
@@ -215,7 +219,6 @@ else losses-=diff;
 }
 
 let rs=gains/losses;
-
 let rsi=100-(100/(1+rs));
 
 document.getElementById("rsi").innerText=rsi.toFixed(1);
@@ -235,7 +238,7 @@ document.getElementById("position").innerText=position;
 
 
 
-/* 매물대 (최근 캔들 기준) */
+/* 매물대 */
 
 let resistance=Math.max(...highs);
 let support=Math.min(...lows);
@@ -249,7 +252,7 @@ document.getElementById("levels").innerHTML=
 
 
 
-/* 눌림 */
+/* 눌림 예상 */
 
 let pull1=ma;
 let pull2=support;
@@ -258,31 +261,33 @@ let pull3=bb_lower;
 document.getElementById("pullback").innerHTML=
 
 `
-1차 눌림 (MA20)<br>
-${pull1.toFixed(0)}
-
-<br>
-
-2차 눌림 (최근 지지)<br>
-${pull2.toFixed(0)}
-
-<br>
-
-최대 눌림 (BB Lower)<br>
-${pull3.toFixed(0)}
+1차 눌림 ${pull1.toFixed(0)}<br>
+2차 눌림 ${pull2.toFixed(0)}<br>
+최대 눌림 ${pull3.toFixed(0)}
 `;
 
 
 
-/* 눌림 확률 */
+/* 확률 */
 
-let prob="50%";
+let pullProb="50%";
+let riseProb="50%";
 
-if(price>bb_upper) prob="80% 눌림 가능";
-else if(price>ma) prob="60% 눌림 가능";
-else prob="40% 눌림 가능";
+if(price>bb_upper){
+pullProb="80%";
+riseProb="20%";
+}
+else if(price>ma){
+pullProb="60%";
+riseProb="40%";
+}
+else{
+pullProb="40%";
+riseProb="60%";
+}
 
-document.getElementById("prob").innerText=prob;
+document.getElementById("pullprob").innerText=pullProb;
+document.getElementById("riseprob").innerText=riseProb;
 
 
 
