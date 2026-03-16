@@ -4,7 +4,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>BTC Grid Analyzer</title>
+<title>BTC Grid Analyzer 1.1 </title>
 
 <style>
 
@@ -37,7 +37,7 @@ font-weight:bold;
 }
 
 .grid{
-line-height:1.7;
+line-height:1.6;
 }
 
 </style>
@@ -61,6 +61,11 @@ line-height:1.7;
 <div class="card">
 매물대
 <div id="levels">-</div>
+</div>
+
+<div class="card">
+눌림 예상 구간
+<div id="pullback">-</div>
 </div>
 
 <div class="card">
@@ -88,8 +93,9 @@ price.toFixed(2);
 let resistance1 = price + 300;
 let resistance2 = price + 700;
 
-let support1 = price - 300;
-let support2 = price - 700;
+let support1 = price - 250;
+let support2 = price - 500;
+let support3 = price - 1000;
 
 document.getElementById("levels").innerHTML =
 
@@ -103,6 +109,23 @@ ${resistance2.toFixed(0)}
 지지<br>
 ${support1.toFixed(0)}<br>
 ${support2.toFixed(0)}
+`;
+
+document.getElementById("pullback").innerHTML =
+
+`
+1차 눌림<br>
+${support1.toFixed(0)}
+
+<br>
+
+2차 눌림<br>
+${support2.toFixed(0)}
+
+<br>
+
+최대 눌림<br>
+${support3.toFixed(0)}
 `;
 
 let grid = [
@@ -133,9 +156,9 @@ document.getElementById("grid").innerHTML = html;
 let market="중립";
 
 if(price % 2 == 0){
-market="상승 압력";
+market="상승 후 눌림 가능";
 }else{
-market="눌림 가능";
+market="상승 유지";
 }
 
 document.getElementById("market").innerText = market;
