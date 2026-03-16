@@ -3,7 +3,6 @@
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>BTC Grid Analyzer</title>
 
 <style>
@@ -83,7 +82,6 @@ margin-bottom:14px;
 <h1>BTC GRID ANALYZER</h1>
 <div class="version" id="version"></div>
 
-
 <div class="card">
 
 <div class="section-title">현재 가격</div>
@@ -98,29 +96,27 @@ margin-bottom:14px;
 <div class="section-title">현재 위치</div>
 <div class="market" id="position">-</div>
 
+<div class="section-title">눌림 확률</div>
+<div class="market" id="prob">-</div>
+
 </div>
 
-
 <button onclick="analyze()">시장 분석 + 거미줄 계산</button>
-
 
 <div class="card">
 <div class="section-title">매물대</div>
 <div class="value" id="levels">-</div>
 </div>
 
-
 <div class="card">
 <div class="section-title">눌림 예상</div>
 <div class="value" id="pullback">-</div>
 </div>
 
-
 <div class="card">
 <div class="section-title">숏 거미줄</div>
 <div class="grid" id="grid">-</div>
 </div>
-
 
 
 <script>
@@ -137,14 +133,13 @@ version = parseInt(version)+1;
 
 localStorage.setItem("app_version",version);
 
-document.getElementById("version").innerText =
-"Version v"+version;
+document.getElementById("version").innerText="Version v"+version;
 
 
 
 async function analyze(){
 
-/* 현재 가격 */
+/* 가격 */
 
 let res = await fetch(
 "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDC"
@@ -152,46 +147,45 @@ let res = await fetch(
 
 let data = await res.json();
 
-let price = parseFloat(data.price);
+let price=parseFloat(data.price);
 
-document.getElementById("price").innerText =
-price.toFixed(2);
+document.getElementById("price").innerText=price.toFixed(2);
 
 
 
 /* 캔들 */
 
-let k = await fetch(
+let k=await fetch(
 "https://api.binance.com/api/v3/klines?symbol=BTCUSDC&interval=1h&limit=20"
 );
 
-let candles = await k.json();
+let candles=await k.json();
 
-let closes = candles.map(c=>parseFloat(c[4]));
+let closes=candles.map(c=>parseFloat(c[4]));
 
 
 
 /* MA */
 
-let sum = closes.reduce((a,b)=>a+b,0);
+let sum=closes.reduce((a,b)=>a+b,0);
 
-let ma = sum/closes.length;
+let ma=sum/closes.length;
 
 
 
 /* 표준편차 */
 
-let variance = closes.reduce((a,b)=>a+Math.pow(b-ma,2),0)/closes.length;
+let variance=closes.reduce((a,b)=>a+Math.pow(b-ma,2),0)/closes.length;
 
-let sd = Math.sqrt(variance);
+let sd=Math.sqrt(variance);
 
 
 
 /* Bollinger */
 
-let bb_upper = ma + 2*sd;
+let bb_upper=ma+2*sd;
 
-let bb_lower = ma - 2*sd;
+let bb_lower=ma-2*sd;
 
 
 
@@ -202,19 +196,18 @@ let losses=0;
 
 for(let i=1;i<closes.length;i++){
 
-let diff = closes[i]-closes[i-1];
+let diff=closes[i]-closes[i-1];
 
 if(diff>0) gains+=diff;
 else losses-=diff;
 
 }
 
-let rs = gains/losses;
+let rs=gains/losses;
 
-let rsi = 100-(100/(1+rs));
+let rsi=100-(100/(1+rs));
 
-document.getElementById("rsi").innerText =
-rsi.toFixed(1);
+document.getElementById("rsi").innerText=rsi.toFixed(1);
 
 
 
@@ -222,10 +215,10 @@ rsi.toFixed(1);
 
 let position="중립";
 
-if(price>bb_upper) position="BB Upper 위 (과열)";
-else if(price>ma) position="BB Upper~Middle (상승)";
-else if(price>bb_lower) position="BB Middle~Lower (눌림)";
-else position="BB Lower 아래 (과매도)";
+if(price>bb_upper) position="BB Upper 위";
+else if(price>ma) position="BB Upper~Middle";
+else if(price>bb_lower) position="BB Middle~Lower";
+else position="BB Lower 아래";
 
 document.getElementById("position").innerText=position;
 
@@ -233,11 +226,11 @@ document.getElementById("position").innerText=position;
 
 /* 매물대 */
 
-let resistance1 = price+300;
-let resistance2 = price+700;
+let resistance1=price+300;
+let resistance2=price+700;
 
-let support1 = price-300;
-let support2 = price-700;
+let support1=price-300;
+let support2=price-700;
 
 document.getElementById("levels").innerHTML=
 
@@ -257,9 +250,9 @@ ${support2.toFixed(0)}
 
 /* 눌림 */
 
-let pull1 = ma;
-let pull2 = support1;
-let pull3 = bb_lower;
+let pull1=ma;
+let pull2=support1;
+let pull3=bb_lower;
 
 document.getElementById("pullback").innerHTML=
 
@@ -277,6 +270,18 @@ ${pull2.toFixed(0)}
 최대 눌림 (BB Lower)<br>
 ${pull3.toFixed(0)}
 `;
+
+
+
+/* 눌림 확률 */
+
+let prob="50%";
+
+if(price>bb_upper) prob="80% 눌림 가능";
+else if(price>ma) prob="60% 눌림 가능";
+else prob="40% 눌림 가능";
+
+document.getElementById("prob").innerText=prob;
 
 
 
@@ -312,7 +317,7 @@ let market="중립";
 
 if(rsi>75) market="단기 과열";
 else if(rsi<35) market="반등 가능";
-else market="상승 추세 유지";
+else market="상승 추세";
 
 document.getElementById("market").innerText=market;
 
