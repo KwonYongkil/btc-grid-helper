@@ -6,18 +6,20 @@
 
 <title>BTC GRID ANALYZER</title>
 
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
 <style>
 
 body{
 background:#0f172a;
 color:#e5e7eb;
 font-family:-apple-system,BlinkMacSystemFont;
-padding:14px;
+padding:12px;
 }
 
 h1{
 text-align:center;
-font-size:24px;
+font-size:22px;
 margin-bottom:4px;
 }
 
@@ -25,18 +27,18 @@ margin-bottom:4px;
 text-align:center;
 color:#94a3b8;
 font-size:12px;
-margin-bottom:14px;
+margin-bottom:10px;
 }
 
 .card{
 background:#1e293b;
-padding:16px;
-border-radius:12px;
-margin-bottom:12px;
+padding:14px;
+border-radius:10px;
+margin-bottom:10px;
 }
 
 .price{
-font-size:28px;
+font-size:26px;
 font-weight:bold;
 color:#22c55e;
 }
@@ -44,20 +46,9 @@ color:#22c55e;
 .section-title{
 font-size:12px;
 color:#94a3b8;
-margin-bottom:6px;
 }
 
 .value{
-font-size:16px;
-font-weight:600;
-}
-
-.grid{
-font-size:16px;
-line-height:1.7;
-}
-
-.market{
 font-size:15px;
 font-weight:600;
 }
@@ -71,11 +62,11 @@ background:#22c55e;
 font-size:16px;
 font-weight:bold;
 color:#052e16;
-margin-bottom:12px;
+margin-bottom:10px;
 }
 
-iframe{
-border-radius:10px;
+#chart{
+height:320px;
 }
 
 </style>
@@ -85,147 +76,122 @@ border-radius:10px;
 <body>
 
 <h1>BTC GRID ANALYZER</h1>
-<div class="version" id="version"></div>
+<div class="version">Version v10</div>
 
 <div class="card">
 
 <div class="section-title">현재 가격</div>
 <div class="price" id="price">-</div>
 
-<div class="section-title">시장 상태</div>
-<div class="market" id="market">-</div>
-
 <div class="section-title">RSI</div>
-<div class="market" id="rsi">-</div>
+<div class="value" id="rsi">-</div>
 
-<div class="section-title">현재 위치</div>
-<div class="market" id="position">-</div>
-
-<div class="section-title">눌림 확률</div>
-<div class="market" id="pullprob">-</div>
-
-<div class="section-title">상승 확률</div>
-<div class="market" id="riseprob">-</div>
+<div class="section-title">추세</div>
+<div class="value" id="trend">-</div>
 
 </div>
-
 
 <button onclick="analyze()">시장 분석</button>
 
-
 <div class="card">
-<div class="section-title">추세</div>
-<div class="market" id="trend">-</div>
 
-<div class="section-title">최근 범위</div>
-<div class="value" id="range">-</div>
-</div>
-
-
-<div class="card">
-<div class="section-title">Bollinger Band</div>
-<div class="value" id="bb">-</div>
-</div>
-
-
-<div class="card">
-<div class="section-title">매물대</div>
-<div class="value" id="levels">-</div>
-</div>
-
-
-<div class="card">
 <div class="section-title">눌림 예상</div>
 <div class="value" id="pullback">-</div>
-</div>
-
-
-<div class="card">
-<div class="section-title">숏 거미줄</div>
-<div class="grid" id="grid">-</div>
-</div>
-
-
-<div class="card">
-<div class="section-title">TradingView Chart</div>
-
-<iframe
-width="100%"
-height="400"
-src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=15&theme=dark"
-></iframe>
 
 </div>
 
+<div id="chart"></div>
 
 <script>
 
-/* 버전 */
+const chart = LightweightCharts.createChart(
+document.getElementById('chart'),
+{
+layout:{
+background:{color:'#0f172a'},
+textColor:'#d1d5db'
+},
+grid:{
+vertLines:{color:'#1e293b'},
+horzLines:{color:'#1e293b'}
+}
+})
 
-const APP_VERSION="v9"
-
-document.getElementById("version").innerText=
-"Version "+APP_VERSION
-
+const lineSeries = chart.addLineSeries({
+color:'#22c55e',
+lineWidth:2
+})
 
 
 async function analyze(){
 
 /* 가격 */
 
-let res=await fetch(
+let priceRes = await fetch(
 "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDC"
 )
 
-let data=await res.json()
+let priceData = await priceRes.json()
 
-let price=parseFloat(data.price)
+let price = parseFloat(priceData.price)
 
-document.getElementById("price").innerText=
+document.getElementById("price").innerText =
 price.toFixed(2)
 
 
 
 /* 캔들 */
 
-let k=await fetch(
-"https://api.binance.com/api/v3/klines?symbol=BTCUSDC&interval=1h&limit=20"
+let k = await fetch(
+"https://api.binance.com/api/v3/klines?symbol=BTCUSDC&interval=15m&limit=100"
 )
 
-let candles=await k.json()
+let candles = await k.json()
 
-let closes=candles.map(c=>parseFloat(c[4]))
-let highs=candles.map(c=>parseFloat(c[2]))
-let lows=candles.map(c=>parseFloat(c[3]))
+let closes = candles.map(c=>parseFloat(c[4]))
+let highs = candles.map(c=>parseFloat(c[2]))
+let lows = candles.map(c=>parseFloat(c[3]))
+
+
+
+/* 차트 데이터 */
+
+let chartData = candles.map(c=>({
+
+time:c[0]/1000,
+value:parseFloat(c[4])
+
+}))
+
+lineSeries.setData(chartData)
 
 
 
 /* MA */
 
-let sum=closes.reduce((a,b)=>a+b,0)
-let ma=sum/closes.length
+let sum = closes.slice(-20).reduce((a,b)=>a+b,0)
+let ma = sum / 20
 
 
 
 /* 표준편차 */
 
-let variance=closes.reduce((a,b)=>a+Math.pow(b-ma,2),0)/closes.length
-let sd=Math.sqrt(variance)
+let variance =
+closes.slice(-20).reduce((a,b)=>a+Math.pow(b-ma,2),0)/20
+
+let sd = Math.sqrt(variance)
 
 
 
 /* Bollinger */
 
-let bb_upper=ma+2*sd
-let bb_lower=ma-2*sd
+let bbLower = ma - 2*sd
 
-document.getElementById("bb").innerHTML=
 
-`
-Upper ${bb_upper.toFixed(0)}<br>
-Middle ${ma.toFixed(0)}<br>
-Lower ${bb_lower.toFixed(0)}
-`
+
+/* 지지 */
+
+let support = Math.min(...lows.slice(-20))
 
 
 
@@ -244,54 +210,10 @@ else losses-=diff
 }
 
 let rs=gains/losses
+
 let rsi=100-(100/(1+rs))
 
 document.getElementById("rsi").innerText=rsi.toFixed(1)
-
-
-
-/* 위치 */
-
-let position="중립"
-
-if(price>bb_upper)
-position="BB Upper 위"
-
-else if(price>ma)
-position="BB Upper~Middle"
-
-else if(price>bb_lower)
-position="BB Middle~Lower"
-
-else
-position="BB Lower 아래"
-
-document.getElementById("position").innerText=position
-
-
-
-/* 매물대 */
-
-let resistance=Math.max(...highs)
-let support=Math.min(...lows)
-
-document.getElementById("levels").innerHTML=
-
-`
-저항 ${resistance.toFixed(0)}<br>
-지지 ${support.toFixed(0)}
-`
-
-
-
-/* 최근 범위 */
-
-document.getElementById("range").innerHTML=
-
-`
-최근 고점 ${resistance.toFixed(0)}<br>
-최근 저점 ${support.toFixed(0)}
-`
 
 
 
@@ -300,10 +222,10 @@ document.getElementById("range").innerHTML=
 let trend="조정"
 
 if(price>ma && rsi>55)
-trend="상승 추세"
+trend="상승"
 
 else if(price<ma && rsi<45)
-trend="하락 추세"
+trend="하락"
 
 document.getElementById("trend").innerText=trend
 
@@ -313,72 +235,43 @@ document.getElementById("trend").innerText=trend
 
 let pull1=ma
 let pull2=support
-let pull3=bb_lower
+let pull3=bbLower
 
 document.getElementById("pullback").innerHTML=
 
 `
-1차 눌림 ${pull1.toFixed(0)}<br>
-2차 눌림 ${pull2.toFixed(0)}<br>
-최대 눌림 ${pull3.toFixed(0)}
+1차 ${pull1.toFixed(0)}<br>
+2차 ${pull2.toFixed(0)}<br>
+3차 ${pull3.toFixed(0)}
 `
 
 
 
-/* 확률 */
+/* 수평선 표시 */
 
-let pullProb="50%"
-let riseProb="50%"
+chart.addLineSeries({
+color:'#fbbf24',
+lineWidth:1
+}).setData([
+{time:chartData[0].time,value:pull1},
+{time:chartData[chartData.length-1].time,value:pull1}
+])
 
-if(price>bb_upper){
+chart.addLineSeries({
+color:'#f97316',
+lineWidth:1
+}).setData([
+{time:chartData[0].time,value:pull2},
+{time:chartData[chartData.length-1].time,value:pull2}
+])
 
-pullProb="80%"
-riseProb="20%"
-
-}
-
-else if(price>ma){
-
-pullProb="60%"
-riseProb="40%"
-
-}
-
-else{
-
-pullProb="40%"
-riseProb="60%"
-
-}
-
-document.getElementById("pullprob").innerText=pullProb
-document.getElementById("riseprob").innerText=riseProb
-
-
-
-/* 거미줄 */
-
-let grid=[
-
-price+200,
-price+500,
-price+900,
-price+1400,
-price+2000
-
-]
-
-let qty=[4,5,6,6,7]
-
-let html=""
-
-for(let i=0;i<grid.length;i++){
-
-html+=grid[i].toFixed(0)+" → "+qty[i]+"<br>"
-
-}
-
-document.getElementById("grid").innerHTML=html
+chart.addLineSeries({
+color:'#ef4444',
+lineWidth:1
+}).setData([
+{time:chartData[0].time,value:pull3},
+{time:chartData[chartData.length-1].time,value:pull3}
+])
 
 }
 
